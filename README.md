@@ -65,6 +65,8 @@ Format
 
 ### Text
 
+Plain text is represented as a string, whether it will become a text node or an element attribute.
+
 ```js
 // Before
 'I am some text'
@@ -72,8 +74,6 @@ Format
 // After
 'I am some text'
 ```
-
-Plain text is represented as a string, whether it will become a text node or an element attribute.
 
 ### Interpolator
 
