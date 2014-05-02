@@ -40,6 +40,9 @@ Some terminology:
 * **fragment** - an array of *items*. There is a single *root fragment*. Certain items, such as elements, may have fragments of their own.
 * **item** - a node in the abstract syntax tree, to use traditional parsing jargon. 'Item' is preferred since the word 'node' is used frequently in Ractive to refer to DOM nodes.
 * **reference** - data binding targets *refer* to the data they wish to bind to. References are context dependant - the `bar` reference in `{{#foo}}{{bar}}{{/foo}}` may *resolve* to `foo.bar` at runtime, if `foo` turns out to be an object with a `bar` property.
+* **expression** - a data binding target may use an expression instead of a reference - e.g. `{{foo + bar}}`. These expressions contain references which are evaluated at runtime - the expression as a whole is re-evaluated when the data those references point to change. See the [section on expressions](#expressions).
+* **reference expression** - some expressions, such as `{{foo[bar]}}`, will resolve to references (in this example, whenever the value of `bar` changes). These are treated differently to regular expressions, which allows them to be used for two-way binding. See the [section on reference expressions](#reference-expressions).
+* **directive** - instructions on how an element should render and behave, such as `on-click='activate'` or `intro='fade'` look like attributes, but are not rendered to the DOM. They are treated differently by the parser depending on the directive type. See the [section on directives](#directives).
 
 
 
@@ -128,7 +131,7 @@ As an alternative to a reference, an interpolator may have an *expression*...
 }
 ```
 
-See the sections on [expressions](#expressions) and [reference expressions](#reference expressions) for more information.
+See the sections on [expressions](#expressions) and [reference expressions](#reference-expressions) for more information.
 
 Expressions and reference expressions can also be used with [triples](#triple) and [sections](#section). For brevity, they are omitted from the examples below.
 
@@ -179,6 +182,39 @@ Note: this will likely change in the near future. In regular Mustache, lists, ob
 
 ### Element
 
+An 'element' may in fact be a component - this is determined at render time. As far as the parser is concerned, they are the same.
 
+```js
+// Before
+<div id='box' class='type-{{foo}}' intro='fade:{delay:500}' on-click='log:{{hello}}'>...</div>
+
+// After
+{
+  t: 7,
+  e: 'div',
+  a: {               // attributes (should only exist if there are one or more attributes)
+    id: 'box',       // static attributes are stored as strings
+    class: [         // dynamic attributes are stored as fragments
+      'type-',
+      { t: 2, r: 'foo' }
+    ]
+  },
+  t1: {              // t1 is `intro`, t2 is `outro`, t0 is `intro-outro`
+    n: 'fade',       // directive name
+    a: [{            // directive arguments - `a` - are parsed
+      delay: 500
+    }]
+  },
+  v: {               // proxy event directives - a map of name:definition pairs
+    click: {
+      n: 'log',
+      d: [{          // this time, the directive has dynamic arguments - `d` instead of `a`
+        t: 2,
+        r: 'hello'
+      }]
+    }
+  },
+  f: ['...']         // element children fragment
+}
 
 TODO the rest of this document
