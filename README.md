@@ -267,7 +267,7 @@ A subset of expressions fall into the category of *reference expressions* - thos
 
 Reference expressions are denoted by the property name `kx`, for reasons we won't go into.
 
-We'll use a horribly contrived reference expression to illustrate how they are represented in parse templates:
+We'll use a horribly contrived reference expression to illustrate how they are represented in parsed templates:
 
 ```js
 // Before
