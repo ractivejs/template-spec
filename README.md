@@ -216,4 +216,36 @@ An 'element' may in fact be a component - this is determined at render time. As 
   f: ['...']         // element children fragment
 }
 
+
+### Partial
+
+Partials are markers for places where template snippets should be inserted.
+
+```js
+// Before
+{{>foo}}
+
+// After
+{
+  t: 8,
+  r: 'foo'
+}
+```
+
+
+### Comment
+
+With the standard parser, comments are stripped unless the `stripComments` option is false.
+
+```js
+// Before
+<!-- This is a comment -->
+
+// After
+{
+  t: 9,
+  c: ' This is a comment '
+}
+```
+
 TODO the rest of this document
