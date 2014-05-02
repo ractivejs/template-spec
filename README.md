@@ -58,8 +58,7 @@ Each item in the template (other than text items, which are represented as strin
   SECTION      : 4,
   ELEMENT      : 7,
   PARTIAL      : 8,
-  COMMENT      : 9,
-  COMPONENT    : 15
+  COMMENT      : 9
 ]
 ```
 
@@ -69,6 +68,8 @@ Format
 
 ### Text
 
+Plain text is represented as a string, whether it will become a text node or an element attribute.
+
 ```js
 // Before
 'I am some text'
@@ -76,8 +77,6 @@ Format
 // After
 'I am some text'
 ```
-
-Plain text is represented as a string, whether it will become a text node or an element attribute.
 
 ### Interpolator
 
