@@ -185,7 +185,7 @@ An 'element' may in fact be a component - this is determined at render time. As 
 
 ```js
 // Before
-<div id='box' class='type-{{foo}}' intro='fade:{delay:500}' on-click='log:{{hello}}'>...</div>
+'<div id="box" class="type-{{foo}}" intro="fade:{delay:500}" on-click="log:{{hello}}">...</div>'
 
 // After
 {
@@ -215,6 +215,7 @@ An 'element' may in fact be a component - this is determined at render time. As 
   },
   f: ['...']         // element children fragment
 }
+```
 
 
 ### Partial
