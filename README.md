@@ -240,7 +240,7 @@ With the standard parser, comments are stripped unless the `stripComments` optio
 
 ```js
 // Before
-<!-- This is a comment -->
+'<!-- This is a comment -->'
 
 // After
 {
@@ -249,4 +249,116 @@ With the standard parser, comments are stripped unless the `stripComments` optio
 }
 ```
 
-TODO the rest of this document
+
+Expressions
+-----------
+
+While Mustache brands itself as a 'logic-less' templating language, Ractive templates can feature JavaScript expressions. See the [docs](http://docs.ractivejs.org/latest/expressions) for more detail.
+
+Ractive's built-in parser is therefore capable of parsing JavaScript expressions to an abstract syntax tree (AST). However the AST is not transported as part of the template; instead, it is used to extract references from the expression (for data-binding purposes) and then flattened to a string representation.
+
+Only a subset of the infinite range of JavaScript expressions is supported (albeit an infinite subset...) - those which do not use assignment operators (such as `=` or `++`), regular expressions, function literals, or `new`/`delete`/`void` operators. This is to ensure security and prevent side-effects.
+
+
+Reference expressions
+---------------------
+
+A subset of expressions fall into the category of *reference expressions* - those expressions which, when their references have been resolved and they can be evaluated, will resolve to references. For example the `foo[bar]` expression, once we know that `bar === 'qux'`, is equivalent to `foo.qux`. Treating these expressions differently allows us to perform certain tricks that would otherwise be impossible, such as two-way data binding. This turns out to be incredibly useful when building interactive tabular interfaces, for example.
+
+Reference expressions are denoted by the property name `kx`, for reasons we won't go into.
+
+We'll use a horribly contrived reference expression to illustrate how they are represented in parse templates:
+
+```js
+// Before
+'{{one[two]["three"].four[five+6]}}'
+
+// After
+{
+  t: 2,
+  kx: {
+    r: 'one'      // the 'base reference'
+    m: [          // the 'members'
+      { t: 30, n: 'two' },
+      { r: [], s: 'three' },
+      'four',
+      { r: ['five'], s: '${0}+6' }
+    ]
+  }
+}
+```
+
+Type `30` (the first member) is used to denote a reference. The second and final members are expressions in their own right. The third is a property name, which is stored as a string.
+
+
+Directives
+----------
+
+As described earlier, directives look like attributes but aren't rendered to the DOM as attributes. They can be **transition** directives (`intro`, `outro`, or `intro-outro`), **decorator** directives, or **event directives** (`on-click`, `on-mouseover` and so on). There are some rules:
+
+* There can be zero or one `intro` (denoted in the template as `t1`) and zero or one `outro` (`t2`). `intro-outro` (`t0`) counts as one of each.
+* There can be zero or one `decorator` (`o`).
+* There can be as many event directives as you like, but only one of each kind. Different events that shared a handler can be chained: `on-change-input='update'`.
+
+In their simplest form, decorators are represented as strings:
+
+```js
+// Before
+'<div on-click="activate">...</div>'
+
+// After
+{
+  t: 7,
+  e: 'div',
+  v: {
+    click: 'activate'
+  }
+}
+```
+
+However a directive may have arguments, in which case the directive template is an object rather than a string. If the arguments are static (no data-binding), they are converted to objects at parse time. The directive name is denoted by `n`, and the arguments are denoted by `a`.
+
+```js
+// Before
+'<div on-click="activate:{foo:1,bar:2},42">...</div>'
+
+// After
+{
+  t: 7,
+  e: 'div',
+  v: {
+    click: {
+      n: 'activate',
+      a: [
+        { foo: 1, bar: 2 },
+        42
+      ]
+    }
+  }
+}
+```
+
+If the arguments are dynamic, they are denoted by `d` instead, which is a fragment. This instructs Ractive's renderer to set up the appropriate data binding.
+
+```js
+// Before
+'<div on-click="activate:{message:{{message}}}">...</div>'
+
+// After
+{
+  t: 7,
+  e: 'div',
+  v: {
+    click: {
+      n: 'activate',
+      d: [
+        '{message:',
+        { t: 2, r: 'message' },
+        '}'
+      ]
+    }
+  }
+}
+```
+
+This fragment will be parsed whenever the event fires.
