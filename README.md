@@ -19,12 +19,12 @@ But we could have passed the parsed template instead:
 ```js
 var ractive = new Ractive({
   el: 'body',
-  template: [{t:7,e:'h1',f:['Hello ',{t:2,r:'name'},'!']}],
+  template: {v:1,t:[{t:7,e:'h1',f:['Hello ',{t:2,r:'name'},'!']}]},
   data: { name: 'world' }
 });
 ```
 
-This document details the format of these parsed templates. **It is a living standard**, which is developer-speak for 'it might change without notice'. The hope is that documenting it here will at least make those changes visible and transparent (is that an oxymoron?).
+This document details the format of these parsed templates.
 
 
 
@@ -43,6 +43,26 @@ Some terminology:
 * **expression** - a data binding target may use an expression instead of a reference - e.g. `{{foo + bar}}`. These expressions contain references which are evaluated at runtime - the expression as a whole is re-evaluated when the data those references point to change. See the [section on expressions](#expressions).
 * **reference expression** - some expressions, such as `{{foo[bar]}}`, will resolve to references (in this example, whenever the value of `bar` changes). These are treated differently to regular expressions, which allows them to be used for two-way binding. See the [section on reference expressions](#reference-expressions).
 * **directive** - instructions on how an element should render and behave, such as `on-click='activate'` or `intro='fade'` look like attributes, but are not rendered to the DOM. They are treated differently by the parser depending on the directive type. See the [section on directives](#directives).
+
+
+Version
+-------
+
+This is **version 1** of the specification, as shown by the `v: 1` in the [structure](#structure) section below. This ensures that your build tools, or server-side compile steps, are speaking the same language as the copy of Ractive running in your app in the browser.
+
+
+Structure
+---------
+
+```js
+{
+  v: 1, /* Template spec version */
+  t: [  /* items in the main template */ ],
+  p: {  /* Optional hash of partials */
+    foo: [ /* items in the 'foo' partial */ ]
+  }
+}
+```
 
 
 
