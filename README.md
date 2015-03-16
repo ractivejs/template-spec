@@ -75,7 +75,6 @@ Each item in the template (other than text items, which are represented as strin
   PARTIAL        : 8,
   COMMENT        : 9,
   YIELDER        : 16,
-  INLINE_PARTIAL : 17,
   DOCTYPE        : 18
 ]
 ```
@@ -234,6 +233,50 @@ An 'element' may in fact be a component - this is determined at render time. As 
 }
 ```
 
+Attributes can exist inside mustache sections:
+
+```js
+// Before
+'<div {{#if active}}class="active"{{/if}}>...</div>'
+
+// After
+{
+  t: 7,
+  e: "div",
+  m: [
+    {
+      t: 4,
+      f: [ 'class="active"' ],
+      n: 50,
+      r: "active"
+    }
+  ],
+  f: [
+    "..."
+  ]
+}
+```
+
+Components can have *inline partial definitions* - these are passed to the component constructor. If the component's template includes a [partial](#partial) or a [yielder](#yielder), the matching partial definition is used.
+
+```js
+// Before
+`<widget>
+  some content
+  {{#partial foo}}this is foo{{/foo}}
+</widget>`
+
+// After
+{
+  t: 7,
+  e: 'widget',
+  f: [ 'some content' ],
+  p: {
+    foo: [ 'this is foo' ]
+  }
+}
+```
+
 
 ### Partial
 
@@ -241,11 +284,79 @@ Partials are markers for places where template snippets should be inserted.
 
 ```js
 // Before
-{{>foo}}
+'{{>foo}}''
 
 // After
 {
   t: 8,
+  r: 'foo'
+}
+```
+
+A partial may use an expression instead of a partial name:
+
+```js
+// Before
+'{{>partials[type]}}'
+
+// After
+{
+  t: 8,
+  rx: {
+    r: "partials",
+    m: [
+      {
+        t: 30,
+        n: "type"
+      }
+    ]
+  }
+}
+```
+
+It may also have a *context*, which determines the value of `this` inside the partial. In effect, it is converted internally to a `{{#with...}}` block:
+
+```js
+// Before
+'{{>foo items[i]}}'
+
+// Equivalent to
+'{{#with items[i]}}{{>foo}}{{/with}}'
+
+// After
+{
+  t: 4,
+  n: 53,
+  rx: {
+    r: "items",
+    m: [
+      {
+        t: 30,
+        n: "i"
+      }
+    ]
+  },
+  f: [
+    {
+      t: 8,
+      r: "foo"
+    }
+  ]
+}
+```
+
+
+### Yielder
+
+Yielders are similar to partials, except that the content 'belongs' to the parent rather than the component:
+
+```js
+// Before
+{{yield foo}}
+
+// After
+{
+  t: 16,
   r: 'foo'
 }
 ```
@@ -289,14 +400,14 @@ While Mustache brands itself as a 'logic-less' templating language, Ractive temp
 
 Ractive's built-in parser is therefore capable of parsing JavaScript expressions to an abstract syntax tree (AST). However the AST is not transported as part of the template; instead, it is used to extract references from the expression (for data-binding purposes) and then flattened to a string representation.
 
-Only a subset of the infinite range of JavaScript expressions is supported (albeit an infinite subset...) - those which do not use assignment operators (such as `=` or `++`), regular expressions, function literals, or `new`/`delete`/`void` operators. This is to ensure security and prevent side-effects.
+Only a subset of the infinite range of JavaScript expressions is supported (albeit an infinite subset...) - those which do not use assignment operators (such as `=` or `++`), function literals, or `new`/`delete`/`void` operators. This is to ensure security and prevent side-effects.
 
 
 ## Reference expressions
 
 A subset of expressions fall into the category of *reference expressions* - those expressions which, when their references have been resolved and they can be evaluated, will resolve to references. For example the `foo[bar]` expression, once we know that `bar === 'qux'`, is equivalent to `foo.qux`. Treating these expressions differently allows us to perform certain tricks that would otherwise be impossible, such as two-way data binding. This turns out to be incredibly useful when building interactive tabular interfaces, for example.
 
-Reference expressions are denoted by the property name `kx`, for reasons we won't go into.
+Reference expressions are denoted by the property name `rx`, for reasons we won't go into.
 
 We'll use a horribly contrived reference expression to illustrate how they are represented in parsed templates:
 
@@ -307,7 +418,7 @@ We'll use a horribly contrived reference expression to illustrate how they are r
 // After
 {
   t: 2,
-  kx: {
+  rx: {
     r: 'one'      // the 'base reference'
     m: [          // the 'members'
       { t: 30, n: 'two' },
